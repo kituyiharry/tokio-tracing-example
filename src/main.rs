@@ -16,6 +16,7 @@ use std::{error::Error, net::SocketAddr};
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Registry};
 use tracing_tree::HierarchicalLayer;
+use tracing_chrome;
 
 
 use tokio::{
@@ -28,19 +29,17 @@ use tracing::{debug, info, info_span, Instrument};
 async fn main() -> Result<(), Box<dyn Error>> {
     //tracing_subscriber::fmt::init();
 
+    let (chrome_layer, _guard) = tracing_chrome::ChromeLayerBuilder::new()
+        .file("/shared/chrome-trace.json".into())
+        .build();
     Registry::default()
         .with(EnvFilter::from_default_env())
         .with(
             HierarchicalLayer::new(2)
-                .with_targets(true)
-                .with_bracketed_fields(true),
-        )
-        // 👇 new!
-        .with(
-            tracing_subscriber::fmt::layer()
-                .json()
-                .with_writer(|| File::create("/tmp/log.json").unwrap()),
-        )
+            .with_targets(true)
+            .with_bracketed_fields(true),
+            )
+        .with(chrome_layer)
         .init();
 
     run_server().await
