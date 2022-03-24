@@ -27,22 +27,26 @@ use tracing::{debug, info, info_span, Instrument};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn Error>> {
-    //tracing_subscriber::fmt::init();
+    let tracer =
+        opentelemetry_jaeger::new_pipeline().install_batch(opentelemetry::runtime::Tokio)?;
 
-    let (chrome_layer, _guard) = tracing_chrome::ChromeLayerBuilder::new()
-        .file("/shared/chrome-trace.json".into())
-        .build();
+    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
+
     Registry::default()
         .with(EnvFilter::from_default_env())
         .with(
             HierarchicalLayer::new(2)
-            .with_targets(true)
-            .with_bracketed_fields(true),
-            )
-        .with(chrome_layer)
+                .with_targets(true)
+                .with_bracketed_fields(true),
+        )
+        .with(telemetry)
         .init();
 
-    run_server().await
+    run_server().await?;
+
+    opentelemetry::global::shutdown_tracer_provider();
+
+    Ok(())
 }
 
 // 👇 here we use an attribute macro
