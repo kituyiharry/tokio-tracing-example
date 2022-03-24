@@ -9,3 +9,4 @@ edition = "2021"
 tokio = { version = "1.17.0", features = ["full"] }
 tracing = "0.1.21"
 tracing-subscriber = { version = "0.3.9", features = ["env-filter"] }
+tracing-tree = "0.2.0"

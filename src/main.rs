@@ -12,6 +12,11 @@
 
 use std::{error::Error, net::SocketAddr};
 
+use tracing_subscriber::EnvFilter;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Registry};
+use tracing_tree::HierarchicalLayer;
+
+
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
     net::{TcpListener, TcpStream},
@@ -20,7 +25,17 @@ use tracing::{debug, info, info_span, Instrument};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn Error>> {
-    tracing_subscriber::fmt::init();
+    //tracing_subscriber::fmt::init();
+
+     // 👇 new!
+    Registry::default()
+        .with(EnvFilter::from_default_env())
+        .with(
+            HierarchicalLayer::new(2)
+                .with_targets(true)
+                .with_bracketed_fields(true),
+        )
+        .init();
 
     run_server().await
 }
