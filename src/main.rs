@@ -1,22 +1,20 @@
-use std::error::Error;
-use std::net::SocketAddr;
+use std::{error::Error, net::SocketAddr};
 
 use tokio::net::TcpListener;
 
+// 👇 this will take care of building the runtime
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<(), Box<dyn Error>> {
+    // note: our function is now `async fn`
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()?;
-    rt.block_on(async {
-        let addr: SocketAddr = "0.0.0.0:3779".parse()?; 
-        println!("Listening on http://{}", addr);
-        let listener = TcpListener::bind(addr).await?;
-        loop {
-            let (stream, addr) = listener.accept().await?;
-            println!("Accepted connection from {addr}");
-            // do nothing for now, it's a simple example
-            drop(stream)
-        }
-    })
+    let addr: SocketAddr = "0.0.0.0:3779".parse()?;
+    println!("Listening on http://{}", addr);
+    //                       we can await from there!  👇
+    let listener = TcpListener::bind(addr).await?;
+    loop {
+        let (stream, addr) = listener.accept().await?;
+        println!("Accepted connection from {addr}");
+        // just do nothing, it's a simple example
+        drop(stream)
+    }
 }
