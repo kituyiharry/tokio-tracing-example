@@ -10,13 +10,11 @@
 // So next is to logically spawn threads that can epoll_wait for non-blocking io
 
 
-use std::fs::File;
 use std::{error::Error, net::SocketAddr};
 
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Registry};
 use tracing_tree::HierarchicalLayer;
-use tracing_chrome;
 use console_subscriber;
 
 
@@ -69,9 +67,12 @@ async fn run_server() -> Result<(), Box<dyn Error>> {
     info!("Listening on http://{}", addr);
     let listener = TcpListener::bind(addr).await?;
     loop {
-        //                      here we use a Future extension trait 👇
         let (stream, addr) = listener.accept().instrument(info_span!("accept")).await?;
-        handle_connection(stream, addr).await?;
+        tokio::spawn(async move {
+            if let Err(err) = handle_connection(stream, addr).await {
+                tracing::error!(%err, "Error handling connection" );
+            }
+        });
     }
 }
 
