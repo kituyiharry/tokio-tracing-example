@@ -36,6 +36,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let (console, server) = console_subscriber::ConsoleLayer::builder().build();
 
     tokio::spawn(async move {
+        // This is a GRPC server for tokio-console
         server.serve().await.unwrap();
     });
 
