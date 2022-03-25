@@ -51,7 +51,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with(console)
         .init();
 
-    run_server().await?;
+    //run_server().await?;
+
+    // Wrap our server in a task to see connection tasks
+    let handle = tokio::task::spawn(async { run_server().await.unwrap() });
+    handle.await?;
 
     opentelemetry::global::shutdown_tracer_provider();
 
